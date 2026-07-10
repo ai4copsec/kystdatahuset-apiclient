@@ -32,6 +32,11 @@ class DummySession:
         response = self.responses.pop(0)
         return response
 
+    def request(self, method, url, params=None, json=None, timeout=None):
+        self.calls.append(("request", method, url, params, json, timeout))
+        response = self.responses.pop(0)
+        return response
+
 
 def test_lookup_norvts_incidents_posts_time_window():
     client = KystdataClient()
@@ -50,5 +55,40 @@ def test_lookup_norvts_incidents_posts_time_window():
         "startTime": "2026-01-01T00:00:00",
         "endTime": "2026-01-31T23:59:59",
     }
+    assert timeout == 10
+
+
+def test_request_performs_raw_query_against_arbitrary_endpoint():
+    client = KystdataClient()
+    client.session = DummySession([DummyResponse(payload={"data": {"mmsi": 257123456}})])
+
+    result = client.request(
+        endpoint="/ship/combined/mmsi/257123456",
+        method="get",
+        params={"foo": "bar"},
+    )
+
+    assert result == {"mmsi": 257123456}
+    method, http_method, url, params, json_payload, timeout = client.session.calls[0]
+    assert method == "request"
+    assert http_method == "GET"
+    assert url.endswith("/ship/combined/mmsi/257123456")
+    assert params == {"foo": "bar"}
+    assert json_payload is None
+    assert timeout == 10
+
+
+def test_lookup_ships_for_mmsis_posts_mmsi_list():
+    client = KystdataClient()
+    client.session = DummySession([DummyResponse(payload={"data": [{"mmsi": 477125300}]})])
+
+    result = client.lookup_ships_for_mmsis(["477125300"])
+
+    assert result == [{"mmsi": 477125300}]
+    method, http_method, url, params, json_payload, timeout = client.session.calls[0]
+    assert method == "request"
+    assert http_method == "POST"
+    assert url.endswith("/ship/for-mmsis")
+    assert json_payload == {"mmsiIds": [477125300]}
     assert timeout == 10
 

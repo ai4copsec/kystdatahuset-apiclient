@@ -8,6 +8,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 APICLIENT_NAME = "kystdata"
+OPENAPI_URL = "https://kystdatahuset.no/ws/swagger/index.html"
 BASE_URL = "https://kystdatahuset.no/ws/api"
 
 class KystdataClient:
@@ -99,6 +100,32 @@ class KystdataClient:
             return msg["data"]
         return msg
 
+    def request(
+        self,
+        endpoint: str,
+        method: str = "GET",
+        params: dict | None = None,
+        json_payload: dict | None = None,
+    ) -> dict | list | None:
+        """
+        Perform a raw request against an arbitrary API endpoint.
+
+        :param endpoint: Endpoint path, relative to the API base url, e.g. ``kystinfo/norvts-incidents``
+        :param method: HTTP method to use, e.g. ``GET`` or ``POST``
+        :param params: Query string parameters
+        :param json_payload: JSON request body
+        """
+        url = f"{self.base_url}/{endpoint.lstrip('/')}"
+        try:
+            def request_fn():
+                return self.session.request(method.upper(), url, params=params, json=json_payload, timeout=10)
+
+            response = self._retry_once_on_unauthorized(request_fn(), request_fn)
+            return self._response_data(response)
+        except requests.RequestException as e:
+            logger.error("Raw query error: %s", e)
+            return None
+
     def lookup_ship(self, value: any, key: str = 'mmsi') -> dict | None:
         """Resolves a ship record using the authenticated session."""
         url = f"{self.base_url}/ship/combined/{key}/{value}"
@@ -117,6 +144,17 @@ class KystdataClient:
 
     def lookup_ship_callsign(self, callsign: str | int) -> dict | None:
         return self.lookup_ship(key='callsign', value=callsign)
+
+    def lookup_ships_for_mmsis(self, mmsis: list[str | int]) -> list[dict] | dict | None:
+        """
+        Resolves ship records for a batch of MMSI numbers.
+
+        .. note::
+            This dataset is licensed; the authenticated user needs the
+            ``Kystdatahuset_ekstern_alle`` role (or higher) to access it.
+        """
+        payload = {"mmsiIds": [int(mmsi) for mmsi in mmsis]}
+        return self.request(endpoint="ship/for-mmsis", method="POST", json_payload=payload)
 
     def lookup_norvts_incidents(
         self,

@@ -53,6 +53,26 @@ kystdata --help
 kystdata query --help
 ```
 
+Authenticate and print the bearer token (useful for e.g. calling the API
+directly with `curl`):
+
+```shell
+kystdata login
+```
+
+`query` supports several lookups, selected with `--lookup`
+(`incidents` [default], `ship-mmsi`, `ship-callsign`, `ships-for-mmsis`):
+
+```shell
+kystdata query --lookup ship-mmsi --mmsi 257123456
+kystdata query --lookup ship-callsign --callsign LA1234
+kystdata query --lookup ships-for-mmsis --mmsi 257123456 477125300
+```
+
+For non-incident lookups, the result is written to a single file named
+`kystdata-<lookup>.json` (or `.parquet`) in `--output-dir`; use
+`--output-filename` to name it differently.
+
 Download all NOR VTS incidents in a time window as individual JSON files:
 
 ```shell
@@ -76,9 +96,27 @@ kystdata query --output-format parquet --output-dir ./out \
 
 If `--from-time` / `--to-time` are omitted, all available incidents are
 fetched. If `--output-dir` is omitted, files are written to a timestamped
-directory under the system temp directory. `--output-filename` only applies
-to `--output-format parquet`; JSON output always writes one file per incident
-named `<incident_id>.json`.
+directory under the system temp directory. For `--lookup incidents`,
+`--output-filename` only applies to `--output-format parquet`; JSON output
+always writes one file per incident named `<incident_id>.json`.
+
+### Raw queries
+
+For endpoints not (yet) wrapped by `query`, `raw` performs an authenticated
+request against any endpoint path relative to the API base url
+(`https://kystdatahuset.no/ws/api/`):
+
+```shell
+kystdata raw ship/combined/mmsi/257123456
+
+kystdata raw kystinfo/norvts-incidents --method POST \
+    --data '{"startTime": "2026-01-01T00:00:00", "endTime": "2026-01-31T23:59:59"}'
+```
+
+`--param key=value` adds query string parameters (repeatable), `--data` takes
+a literal JSON string, `@<file>` to read the body from a file, or `-` to read
+it from stdin. The (JSON) response is printed to stdout, or written to a file
+with `--output`.
 
 ## Python API
 
@@ -113,6 +151,7 @@ Ship lookups:
 ```python
 client.lookup_ship_mmsi("257123456")
 client.lookup_ship_callsign("LA1234")
+client.lookup_ships_for_mmsis(["257123456", "477125300"])
 ```
 
 ## Development

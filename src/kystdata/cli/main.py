@@ -9,7 +9,9 @@ from pathlib import Path
 
 from kystdata import __version__ as kystdata_apiclient_version
 from kystdata.cli.base import BaseParser
+from kystdata.cli.login import LoginParser
 from kystdata.cli.query import QueryParser
+from kystdata.cli.raw import RawParser
 from kystdata.core.config import (
     LOG_DATE_FORMAT,
     LOG_FORMAT,
@@ -37,7 +39,7 @@ class MainParser(ArgumentParser):
         self.add_argument("--version", action="store_true", default=False,
                           help="Show current version of kystdatahuset apiclient")
 
-        self.subparsers = self.add_subparsers(help='sub-command help')
+        self.subparsers = self.add_subparsers(help='sub-command help', parser_class=ArgumentParser)
 
     def attach_subcommand_parser(self,
                                  subcommand: str,
@@ -53,9 +55,15 @@ def run():
     Run the main command line interface
     """
     main_parser = MainParser()
+    main_parser.attach_subcommand_parser(subcommand="login",
+                                         help="Authenticate and display the bearer token",
+                                         parser_klass=LoginParser)
     main_parser.attach_subcommand_parser(subcommand="query",
                                          help="Query the Kystdatahuset API",
                                          parser_klass=QueryParser)
+    main_parser.attach_subcommand_parser(subcommand="raw",
+                                         help="Perform a raw query against an arbitrary API endpoint",
+                                         parser_klass=RawParser)
 
     args, unknown_args = main_parser.parse_known_args()
 
