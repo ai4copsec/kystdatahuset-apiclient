@@ -34,6 +34,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "damast",
     "numpy",
     "pandas",
     "platformdirs",
@@ -52,10 +53,6 @@ repository = "https://github.com/ai4copsec/kystdatahuset-apiclient"
 #[project.entry-points]
 
 [project.optional-dependencies]
-dp = [
-    "damast"
-]
-
 dev = [
     "flake8-gl-codeclimate",
     "isort",
@@ -67,7 +64,6 @@ dev = [
 ]
 
 test = [
-    "damast",
     "coverage",
     "pytest",
     "pytest-console-scripts",

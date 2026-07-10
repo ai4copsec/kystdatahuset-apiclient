@@ -24,13 +24,11 @@ Python package.
 
 ### Optional extras
 
-- `dp` — installs [`damast`](https://github.com/damast) to support building
-  an `AnnotatedDataFrame` from incidents (`Incident.get_annotated_dataframe`).
 - `test` — test dependencies (`pytest` and friends).
 - `dev` — tooling used for development (linting, docs, `tox`).
 
 ```shell
-uv sync --extra dp --extra test
+uv sync --extra test
 ```
 
 ## Configuration

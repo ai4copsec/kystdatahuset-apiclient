@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import importlib
 import types
 import typing
 import uuid
 from enum import Enum
 
 import pandas as pd
-from damast.core.metadata import ValidationMode
+import polars
+from damast.core.dataframe import AnnotatedDataFrame
+from damast.core.metadata import DataSpecification, MetaData, ValidationMode
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -81,13 +82,6 @@ class Incident(BaseModel):
     @classmethod
     def get_annotated_dataframe(cls, incidents: list[Incident]):
         df = cls.get_dataframe(incidents=incidents)
-
-        if not importlib.util.find_spec('damast'):
-            raise RuntimeError("Please install 'damast' to support using AnnotatedDataFrame")
-
-        import polars
-        from damast.core.dataframe import AnnotatedDataFrame
-        from damast.core.metadata import DataSpecification, MetaData
 
         columns = [
             DataSpecification(
