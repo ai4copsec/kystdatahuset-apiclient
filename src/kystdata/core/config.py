@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import datetime as dt
 import importlib
+import types
+import typing
 import uuid
 from enum import Enum
-from pathlib import Path
 
 import pandas as pd
-from pydantic import BaseModel, Field, ConfigDict
+from damast.core.metadata import ValidationMode
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DATE_FORMAT = "%Y-%m-%d"
@@ -29,6 +30,15 @@ class Credentials(BaseSettings):
                     extra='ignore'
                 )
 
+class DateRange(str, Enum):
+    TODAY = 'Today'
+    PAST_WEEK = 'Past 7 days'
+    NEXT_WEEK = 'Next 7 days'
+    PAST_30DAYS = 'Past 30 days'
+    NEXT_30DAYS = 'Next 30 days'
+    CUSTOM_TIMEFRAME = 'Custom timeframe'
+
+
 class Incident(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -48,21 +58,25 @@ class Incident(BaseModel):
     link_news: str | None = Field(default=None, description="Link in news")
     media_4_admin: str | None = Field(default=None, description="Internal use")
     open_media: str | None = Field(default=None)
-    
+
     vindretning: str | None = Field(default=None, description="Direction of wind")
     vindstyrke: int | None = Field(default=None, description="Strenght of wind")
-    mmsi: int
+    mmsi: int | None = Field(default=None, description="MMSI Number")
     imo: int | None = Field(default=None, description="IMO Number")
     ship_name: str | None = Field(default=None)
     skipstype_skipsregister: str | None = Field(default=None)
-
-
 
     @classmethod
     def get_dataframe(cls, incidents: list[Incident]) -> pd.DataFrame:
         columns = cls.model_fields.keys()
         return pd.DataFrame.from_records([dict(x) for x in incidents], columns=columns)
 
+
+    @classmethod
+    def _field_representation_type(cls, annotation: type) -> type:
+        if typing.get_origin(annotation) in (typing.Union, types.UnionType):
+            annotation = next(a for a in typing.get_args(annotation) if a is not type(None))
+        return annotation
 
     @classmethod
     def get_annotated_dataframe(cls, incidents: list[Incident]):
@@ -73,10 +87,18 @@ class Incident(BaseModel):
 
         import polars
         from damast.core.dataframe import AnnotatedDataFrame
-        pdf = polars.from_pandas(df)
+        from damast.core.metadata import DataSpecification, MetaData
 
-        metadata = AnnotatedDataFrame.infer_annotation(pdf)
-        return AnnotatedDataFrame(pdf, metadata)
+        columns = [
+            DataSpecification(
+                name=name,
+                description=field.description,
+                is_optional=not field.is_required(),
+                representation_type=cls._field_representation_type(field.annotation),
+            )
+            for name, field in cls.model_fields.items()
+        ]
+        metadata = MetaData(columns=columns)
 
-
-
+        df = polars.from_pandas(df)
+        return AnnotatedDataFrame(df, metadata=metadata, validation_mode=ValidationMode.UPDATE_DATA)

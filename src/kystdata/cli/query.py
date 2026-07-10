@@ -11,9 +11,7 @@ from kystdata.core.client import KystdataClient
 from kystdata.core.config import (
     DATE_FORMAT,
     Credentials,
-    Impact,
-    Report,
-    ReportType,
+    Incident,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,6 +51,7 @@ class QueryParser(BaseParser):
         default_output_dir = Path(tempfile.gettempdir()) / "kystdata-query" / f"{dt.datetime.now(tz=dt.timezone.utc).strftime('%Y%m%d-%H:%M:%S+00:00')}"
         parser.add_argument("--output-dir", type=str, default=str(default_output_dir), help="Output directory to store the report jsons, default: %(default)s")
         parser.add_argument("--output-format", type=str,  default='json', choices=['json', 'parquet'], help="Output plain json files, or converted into a single parquet file")
+        parser.add_argument("--output-filename", type=str, default="kystdata-incidents.parquet", help="Filename for the combined parquet file (only used with --output-format parquet), default: %(default)s")
 
     def execute(self, args):
         super().execute(args)
@@ -61,7 +60,7 @@ class QueryParser(BaseParser):
         credentials = Credentials()
 
         client.login(
-                email=credentials.user,
+                username=credentials.user,
                 password=credentials.password,
                 csrf_token=credentials.csrf_token
         )
@@ -74,33 +73,25 @@ class QueryParser(BaseParser):
         if args.to_time:
             to_time = dt.datetime.strptime(args.to_time, DATE_FORMAT)
 
-        incidents = client.get_incidents(from_time=from_time,
-                                     to_time=to_time,
-                    )
-                    #                 longitude=args.at_lon,
-                    #                 latitude=args.at_lat,
-                    #                 radius=args.radius,
-                    #                 region=args.region,
-                    #                 country=args.country,
-                    #                 category=args.category,
-                    #                 report_id=args.report_id,
-                    #                 report_type=args.report_type,
-                    #                 verified=args.verified,
-                    #                 max_pages=args.max_pages
-                    #                 )
+        if to_time is not None:
+            to_time = to_time.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        incidents = client.lookup_norvts_incidents(from_time=from_time, to_time=to_time) or []
+        incident_models = [incident if isinstance(incident, Incident) else Incident(**incident) for incident in incidents]
 
         if args.output_dir:
             output_dir = Path(args.output_dir)
             output_dir.mkdir(parents=True, exist_ok=True)
 
         if args.output_format == 'json':
-            logger.info(f"Saving reports (.json) in {str(output_dir)}")
-            for r in tqdm(reports, desc="Report:"):
-                report = Report(**r)
-                report.save_json(output_dir=output_dir)
+            logger.info(f"Saving incidents (.json) in {str(output_dir)}")
+            for incident in tqdm(incident_models, desc="Incident:"):
+                incident_path = output_dir / f"{incident.incident_id}.json"
+                incident_path.write_text(incident.model_dump_json(indent=2, by_alias=True), encoding="utf-8")
         elif args.output_format == 'parquet':
-            logger.info(f"Saving all incidents (.parquet) in {str(output_dir)}")
-            adf = Report.get_annotated_dataframe([Report(**x) for x in reports])
-            adf.export(output_dir / "kystdata-incidents.parquet")
+            output_path = output_dir / args.output_filename
+            logger.info(f"Saving all incidents (.parquet) to {output_path}")
+            adf = Incident.get_annotated_dataframe(incident_models)
+            adf.export(output_path)
 
         client.logout()

@@ -1,14 +1,9 @@
-import base64
 import datetime as dt
-import json
 import logging
 from pathlib import Path
 
 import platformdirs
 import requests
-from tqdm import tqdm
-
-from .config import DATE_FORMAT, Impact, ReportType
 
 logger = logging.getLogger(__name__)
 
@@ -25,119 +20,126 @@ class KystdataClient:
 
     _cache_dir: Path
 
-    def __init__(self, base_url: str = HOZINT_BASE_URL):
+    def __init__(self, base_url: str = BASE_URL):
         self.base_url = base_url
         self.session = requests.Session()
 
-        self.session.headers.update({
-            "accept": "application/json",
-            "Content-Type": "application/json"
-            "User-Agent": "Python-Secure-MMSI-Client/1.0",
-        })
+        self.session.headers.update(
+            {
+                "accept": "application/json",
+                "Content-Type": "application/json",
+                "User-Agent": "Python-Secure-MMSI-Client/1.0",
+            }
+        )
 
         self.access_token = None
         self.refresh_token = None
         self.csrf_token = None
+        self._login_credentials: dict[str, str] | None = None
 
         self.cache_dir = platformdirs.user_cache_path(appname=APICLIENT_NAME, ensure_exists=True)
 
-    def login(self, email, password, csrf_token):
+    def login(self, username: str, password: str, csrf_token: str) -> bool:
         """
         Authenticates with Kystdatahuset and saves the returned JWT bearer token.
         """
         url = f"{self.base_url}/auth/login/"
 
-        # Add the specific CSRF token for this request
         headers = {"X-CSRFTOKEN": csrf_token}
         self.csrf_token = csrf_token
+        self._login_credentials = {"username": username, "password": password, "csrf_token": csrf_token}
 
         payload = {
-            "email": email,
+            "username": username,
             "password": password
         }
 
         try:
             response = self.session.post(url, json=payload, headers=headers, timeout=10)
-            response.raise_for_status()  # Raises an error for 4xx or 5xx responses
+            response.raise_for_status()
 
-            logger.info(f"{APICLIENT_NAME} Login successful")
-            data = response.json()
-
-            try:
-                token_data = response.json()
-                token = (
-                    token_data.get("data")['JWT']
-                    if isinstance(token_data, dict)
-                    else response.text
-                )
-            except ValueError:
-                token = response.text.strip().strip('"')
+            token_data = response.json()
+            token = token_data.get("data", {}).get("JWT") if isinstance(token_data, dict) else None
 
             if not token:
-                logger.warning(f"{Failed to parse token from login response. {token=}")
-                return False
+                raise RuntimeError("Failed to parse token from login response")
 
-            # Update session headers with the Bearer token for future calls
+            self.access_token = token
             self.session.headers.update({"Authorization": f"Bearer {self.access_token}"})
 
-            logger.info("Successfully authenticated and obtained JWT token.")
+            logger.info("%s login successful", APICLIENT_NAME)
             return True
 
         except requests.exceptions.HTTPError as err:
             raise RuntimeError(f"{APICLIENT_NAME} Authentication / Login failed: {err}")
 
-    def lookup_ship(self, value: any, key: str = 'mmsi', ) -> dict | None:
-        """Resolves an MMSI number using the authenticated session."""
+    def logout(self) -> None:
+        """
+        Clears the local session state. The Kystdatahuset API does not expose a
+        logout endpoint, so this only drops the locally held tokens and credentials.
+        """
+        self.session.headers.pop("Authorization", None)
+        self.access_token = None
+        self.refresh_token = None
+        self._login_credentials = None
+        logger.info("%s logout", APICLIENT_NAME)
+
+    def _retry_once_on_unauthorized(self, response: requests.Response, request_fn):
+        if response.status_code != 401:
+            return response
+        if not self._login_credentials:
+            return response
+        self.login(**self._login_credentials)
+        return request_fn()
+
+    def _response_data(self, response: requests.Response):
+        response.raise_for_status()
+        msg = response.json()
+        if isinstance(msg, dict) and "data" in msg:
+            return msg["data"]
+        return msg
+
+    def lookup_ship(self, value: any, key: str = 'mmsi') -> dict | None:
+        """Resolves a ship record using the authenticated session."""
         url = f"{self.base_url}/ship/combined/{key}/{value}"
         try:
-            response = self.session.get(url, timeout=10)
+            def request_fn():
+                return self.session.get(url, timeout=10)
 
-            # Handle token expiration (HTTP 401 Unauthorized)
-            if response.status_code == 401:
-                print("Token expired or unauthorized. Attempting re-login...")
-                if self.login():
-                    # Retry the exact request one time after successful re-auth
-                    response = self.session.get(url, timeout=10)
-                else:
-                    return None
-
-            response.raise_for_status()
-            msg = response.json()
-            if 'data' in msg:
-                return msg['data']
-            else:
-                return None
+            response = self._retry_once_on_unauthorized(request_fn(), request_fn)
+            return self._response_data(response)
         except requests.RequestException as e:
-            print(f"Data lookup error: {e}")
+            logger.error("Data lookup error: %s", e)
             return None
 
     def lookup_ship_mmsi(self, mmsi: str | int) -> dict | None:
         return self.lookup_ship(key='mmsi', value=mmsi)
 
     def lookup_ship_callsign(self, callsign: str | int) -> dict | None:
-        return self.lookup_ship_(key='callsign', value=callsign)
+        return self.lookup_ship(key='callsign', value=callsign)
 
-    def lookup_incident(self, from_time: dt.datetime, to_time: dt.datetime):
+    def lookup_norvts_incidents(
+        self,
+        from_time: dt.datetime | None = None,
+        to_time: dt.datetime | None = None,
+    ) -> list[dict] | dict | None:
         url = f"{self.base_url}/kystinfo/norvts-incidents"
+
+        payload: dict[str, str] = {}
+        if from_time is not None:
+            payload["startTime"] = from_time.isoformat()
+        if to_time is not None:
+            payload["endTime"] = to_time.isoformat()
+
         try:
-            response = self.session.get(url, timeout=10)
+            def request_fn():
+                return self.session.post(url, json=payload or None, timeout=10)
 
-            # Handle token expiration (HTTP 401 Unauthorized)
-            if response.status_code == 401:
-                print("Token expired or unauthorized. Attempting re-login...")
-                if self.login():
-                    # Retry the exact request one time after successful re-auth
-                    response = self.session.get(url, timeout=10)
-                else:
-                    return None
-
-            response.raise_for_status()
-            msg = response.json()
-            if 'data' in msg:
-                return msg['data']
-            else:
-                return None
+            response = self._retry_once_on_unauthorized(request_fn(), request_fn)
+            return self._response_data(response)
         except requests.RequestException as e:
-            print(f"Data lookup error: {e}")
+            logger.error("Data lookup error: %s", e)
             return None
 
+    lookup_incident = lookup_norvts_incidents
+    get_incidents = lookup_norvts_incidents
