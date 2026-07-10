@@ -1,0 +1,30 @@
+project:
+  type: website
+
+website:
+  title: "kystdatahuset-apiclient"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: reference/index.qmd
+        text: Reference
+
+format:
+  html:
+    theme: cosmo
+
+quartodoc:
+  package: kystdata
+  dir: reference
+  sections:
+    - title: Client
+      desc: Authentication and Kystdatahuset REST API access
+      contents:
+        - core.client.KystdataClient
+    - title: Config
+      desc: Configuration, credentials and data models
+      contents:
+        - core.config.Credentials
+        - core.config.Incident
+        - core.config.DateRange

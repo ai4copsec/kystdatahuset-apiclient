@@ -59,12 +59,10 @@ dp = [
 dev = [
     "flake8-gl-codeclimate",
     "isort",
-    "jupyter-book<2",
     "pre-commit",
     "pydot",
-    # With sphinx-autoapi NamedTuple is not
-    # parse correctly
-    "sphinx-autoapi<=3.3",
+    "quartodoc",
+    "griffe<2",
     "tox"
 ]
 

@@ -1,0 +1,9 @@
+---
+title: kystdatahuset-apiclient
+---
+
+A Python client for the [Kystdatahuset](https://kystdatahuset.no) REST API.
+
+See the [README](https://github.com/ai4copsec/kystdatahuset-apiclient) for
+installation and command-line usage, and the [Reference](reference/index.qmd)
+for the Python API.

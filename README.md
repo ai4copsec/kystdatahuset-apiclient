@@ -119,7 +119,30 @@ client.lookup_ship_callsign("LA1234")
 
 ## Development
 
+Common tasks are wrapped in a [`Justfile`](Justfile) — install
+[`just`](https://github.com/casey/just) and run:
+
+```shell
+just sync   # uv sync --all-extras
+just test   # run the test suite
+just lint   # run pre-commit hooks (ruff, isort, ...)
+just docs   # build the quartodoc API reference and render the docs site
+```
+
+Without `just`, the equivalent commands are:
+
 ```shell
 uv sync --extra test
 uv run pytest
+```
+
+## Documentation
+
+The docs site (under [`docs/`](docs)) is built with
+[Quarto](https://quarto.org) and [quartodoc](https://machow.github.io/quartodoc)
+for the Python API reference:
+
+```shell
+just docs           # build once
+just docs-preview   # live-reload preview
 ```
