@@ -15,6 +15,7 @@ def test_Incident():
 
     a = Incident(**incident.model_dump())
     df = Incident.get_dataframe([a])
+    assert len(df) == 1
 
 
 
