@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://ai4copsec.github.io/kystdatahuset-apiclient/index.html</loc>
+    <lastmod>2026-07-14T09:07:38.102Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ai4copsec.github.io/kystdatahuset-apiclient/reference/core.config.Credentials.html</loc>
+    <lastmod>2026-07-14T09:07:59.401Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ai4copsec.github.io/kystdatahuset-apiclient/reference/core.config.Incident.html</loc>
+    <lastmod>2026-07-14T09:07:59.402Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ai4copsec.github.io/kystdatahuset-apiclient/reference/core.config.DateRange.html</loc>
+    <lastmod>2026-07-14T09:07:59.404Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ai4copsec.github.io/kystdatahuset-apiclient/reference/core.client.KystdataClient.html</loc>
+    <lastmod>2026-07-14T09:07:59.399Z</lastmod>
+  </url>
+  <url>
+    <loc>https://ai4copsec.github.io/kystdatahuset-apiclient/reference/index.html</loc>
+    <lastmod>2026-07-14T09:07:59.366Z</lastmod>
+  </url>
+</urlset>
