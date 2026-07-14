@@ -5,6 +5,8 @@ on:
     workflows: ["tests"]
     types: [completed]
     branches: [main]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 env:
   PYTHON_VERSION: "3.12"
@@ -17,11 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref || github.event.workflow_run.head_sha }}
 
       - uses: actions/setup-python@v6
         with:
@@ -63,5 +65,6 @@ jobs:
         uses: quarto-dev/quarto-actions/publish@v2
         with:
           target: gh-pages
+          path: docs/_site
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
