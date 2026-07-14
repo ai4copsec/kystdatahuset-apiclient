@@ -1,0 +1,94 @@
+"""
+Main argument parser and CLI entry point.
+"""
+import logging
+import sys
+import traceback as tb
+from argparse import ArgumentParser
+from pathlib import Path
+
+from kystdata import __version__ as kystdata_apiclient_version
+from kystdata.cli.base import BaseParser
+from kystdata.cli.login import LoginParser
+from kystdata.cli.query import QueryParser
+from kystdata.cli.raw import RawParser
+from kystdata.core.config import (
+    LOG_DATE_FORMAT,
+    LOG_FORMAT,
+    LOG_STYLE,
+)
+
+logging.basicConfig(
+    format=LOG_FORMAT,
+    style=LOG_STYLE,
+    datefmt=LOG_DATE_FORMAT,
+)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+class MainParser(ArgumentParser):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.description = "kystdata - communicate with the Kystdatahuset RestAPI"
+
+        self.add_argument("-w", "--workdir", default=str(Path(".").resolve()))
+        self.add_argument("-v", "--verbose", action="store_true")
+        self.add_argument("--log-level", type=str, default="INFO", help="Logging level")
+        self.add_argument("--version", action="store_true", default=False,
+                          help="Show current version of kystdatahuset apiclient")
+
+        self.subparsers = self.add_subparsers(help='sub-command help', parser_class=ArgumentParser)
+
+    def attach_subcommand_parser(self,
+                                 subcommand: str,
+                                 help: str,
+                                 parser_klass: BaseParser
+                                 ):
+        parser = self.subparsers.add_parser(subcommand, help=help)
+        parser_klass(parser=parser)
+
+
+def run():
+    """
+    Run the main command line interface
+    """
+    main_parser = MainParser()
+    main_parser.attach_subcommand_parser(subcommand="login",
+                                         help="Authenticate and display the bearer token",
+                                         parser_klass=LoginParser)
+    main_parser.attach_subcommand_parser(subcommand="query",
+                                         help="Query the Kystdatahuset API",
+                                         parser_klass=QueryParser)
+    main_parser.attach_subcommand_parser(subcommand="raw",
+                                         help="Perform a raw query against an arbitrary API endpoint",
+                                         parser_klass=RawParser)
+
+    args, unknown_args = main_parser.parse_known_args()
+
+    if args.version:
+        print(f"kystdata {kystdata_apiclient_version}")
+        sys.exit(0)
+
+    for current_logger in [logging.getLogger(x) for x in logging.root.manager.loggerDict]:
+        if current_logger.name.startswith("kystdata"):
+            current_logger.setLevel(logging.getLevelName(args.log_level))
+
+    if hasattr(args, "active_subparser"):
+        try:
+            active_subparser = getattr(args, "active_subparser")
+            active_subparser.unknown_args  = unknown_args
+            active_subparser.execute(args)
+        except Exception as e:
+            if args.verbose:
+                tb.print_exception(e)
+            else:
+                print(f"\033[91mError: {e}\033[00m")
+            sys.exit(1)
+    else:
+        main_parser.print_help()
+
+
+if __name__ == "__main__":
+    run()

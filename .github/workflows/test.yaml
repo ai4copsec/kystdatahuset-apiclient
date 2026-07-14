@@ -1,0 +1,94 @@
+name: tests
+
+on:
+  push:
+    paths:
+      - tests/**
+      - src/**
+      - pyproject.toml
+      - .github/workflows/test.yaml
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 1"
+
+env:
+  UV_CACHE_DIR: .uv-cache
+  UV_LINK_MODE: copy
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: pip install uv --quiet
+
+      - uses: actions/cache@v6
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: uv-lint-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            uv-lint-
+
+      - name: Create lock file
+        run: uv lock
+
+      - name: Install dependencies
+        run: uv sync --extra dev --frozen --quiet
+
+      - name: Run pre-commit
+        run: uv run pre-commit run --all-files
+
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.12', '3.13', '3.14']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Remove unnecessary tools (Linux)
+        if: runner.os == 'Linux'
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          # this might remove tools that are actually needed,
+          # when set to "true" but frees about 6 GB
+          tool-cache: true
+
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        run: pip install uv --quiet
+
+      - uses: actions/cache@v6
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: uv-test-${{ matrix.os }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            uv-test-${{ matrix.os }}-
+
+      - name: Create lock file
+        run: uv lock
+
+      - name: Install dependencies
+        run: uv sync --extra test --frozen --quiet
+
+      - name: Run tests
+        run: >
+          uv run pytest tests/ -v --timeout=120
+          --cov=kystdata --cov-report=term-missing --cov-report=xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: coverage-xml-${{ matrix.os }}-${{ matrix.python-version }}
+          path: coverage.xml
+          retention-days: 7
