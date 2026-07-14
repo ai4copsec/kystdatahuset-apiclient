@@ -1,0 +1,9 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "kystdatahuset-apiclient",
+    "section": "",
+    "text": "A Python client for the Kystdatahuset REST API.\nSee the README for installation and command-line usage, and the Reference for the Python API."
+  }
+]
