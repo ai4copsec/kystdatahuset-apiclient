@@ -7,11 +7,11 @@
     "text": "A Python client for the Kystdatahuset REST API.\nSee the README for installation and command-line usage, and the Reference for the Python API."
   },
   {
-    "objectID": "reference/core.config.Credentials.html",
-    "href": "reference/core.config.Credentials.html",
-    "title": "core.config.Credentials",
+    "objectID": "reference/core.config.DateRange.html",
+    "href": "reference/core.config.DateRange.html",
+    "title": "core.config.DateRange",
     "section": "",
-    "text": "core.config.Credentials\ncore.config.Credentials()"
+    "text": "core.config.DateRange\ncore.config.DateRange()"
   },
   {
     "objectID": "reference/core.config.Incident.html",
@@ -21,11 +21,11 @@
     "text": "core.config.Incident\ncore.config.Incident()"
   },
   {
-    "objectID": "reference/core.config.DateRange.html",
-    "href": "reference/core.config.DateRange.html",
-    "title": "core.config.DateRange",
+    "objectID": "reference/core.config.Credentials.html",
+    "href": "reference/core.config.Credentials.html",
+    "title": "core.config.Credentials",
     "section": "",
-    "text": "core.config.DateRange\ncore.config.DateRange()"
+    "text": "core.config.Credentials\ncore.config.Credentials()"
   },
   {
     "objectID": "reference/core.client.KystdataClient.html",
