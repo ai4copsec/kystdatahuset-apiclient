@@ -1,10 +1,17 @@
 [
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "kystdatahuset-apiclient",
+    "objectID": "reference/core.client.KystdataClient.html",
+    "href": "reference/core.client.KystdataClient.html",
+    "title": "core.client.KystdataClient",
     "section": "",
-    "text": "A Python client for the Kystdatahuset REST API.\nSee the README for installation and command-line usage, and the Reference for the Python API."
+    "text": "core.client.KystdataClient(base_url=BASE_URL)\n\n\n\n\n\nName\nDescription\n\n\n\n\nlogin\nAuthenticates with Kystdatahuset and saves the returned JWT bearer token.\n\n\nlogout\nClears the local session state. The Kystdatahuset API does not expose a\n\n\nlookup_ship\nResolves a ship record using the authenticated session.\n\n\nlookup_ships_for_mmsis\nResolves ship records for a batch of MMSI numbers.\n\n\nrequest\nPerform a raw request against an arbitrary API endpoint.\n\n\n\n\n\ncore.client.KystdataClient.login(username, password, csrf_token)\nAuthenticates with Kystdatahuset and saves the returned JWT bearer token.\n\n\n\ncore.client.KystdataClient.logout()\nClears the local session state. The Kystdatahuset API does not expose a logout endpoint, so this only drops the locally held tokens and credentials.\n\n\n\ncore.client.KystdataClient.lookup_ship(value, key='mmsi')\nResolves a ship record using the authenticated session.\n\n\n\ncore.client.KystdataClient.lookup_ships_for_mmsis(mmsis)\nResolves ship records for a batch of MMSI numbers.\n.. note:: This dataset is licensed; the authenticated user needs the Kystdatahuset_ekstern_alle role (or higher) to access it.\n\n\n\ncore.client.KystdataClient.request(\n    endpoint,\n    method='GET',\n    params=None,\n    json_payload=None,\n)\nPerform a raw request against an arbitrary API endpoint.\n:param endpoint: Endpoint path, relative to the API base url, e.g. kystinfo/norvts-incidents :param method: HTTP method to use, e.g. GET or POST :param params: Query string parameters :param json_payload: JSON request body"
+  },
+  {
+    "objectID": "reference/core.client.KystdataClient.html#methods",
+    "href": "reference/core.client.KystdataClient.html#methods",
+    "title": "core.client.KystdataClient",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\nlogin\nAuthenticates with Kystdatahuset and saves the returned JWT bearer token.\n\n\nlogout\nClears the local session state. The Kystdatahuset API does not expose a\n\n\nlookup_ship\nResolves a ship record using the authenticated session.\n\n\nlookup_ships_for_mmsis\nResolves ship records for a batch of MMSI numbers.\n\n\nrequest\nPerform a raw request against an arbitrary API endpoint.\n\n\n\n\n\ncore.client.KystdataClient.login(username, password, csrf_token)\nAuthenticates with Kystdatahuset and saves the returned JWT bearer token.\n\n\n\ncore.client.KystdataClient.logout()\nClears the local session state. The Kystdatahuset API does not expose a logout endpoint, so this only drops the locally held tokens and credentials.\n\n\n\ncore.client.KystdataClient.lookup_ship(value, key='mmsi')\nResolves a ship record using the authenticated session.\n\n\n\ncore.client.KystdataClient.lookup_ships_for_mmsis(mmsis)\nResolves ship records for a batch of MMSI numbers.\n.. note:: This dataset is licensed; the authenticated user needs the Kystdatahuset_ekstern_alle role (or higher) to access it.\n\n\n\ncore.client.KystdataClient.request(\n    endpoint,\n    method='GET',\n    params=None,\n    json_payload=None,\n)\nPerform a raw request against an arbitrary API endpoint.\n:param endpoint: Endpoint path, relative to the API base url, e.g. kystinfo/norvts-incidents :param method: HTTP method to use, e.g. GET or POST :param params: Query string parameters :param json_payload: JSON request body"
   },
   {
     "objectID": "reference/core.config.DateRange.html",
@@ -21,25 +28,18 @@
     "text": "core.config.Incident\ncore.config.Incident()"
   },
   {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "kystdatahuset-apiclient",
+    "section": "",
+    "text": "A Python client for the Kystdatahuset REST API.\nSee the README for installation and command-line usage, and the Reference for the Python API."
+  },
+  {
     "objectID": "reference/core.config.Credentials.html",
     "href": "reference/core.config.Credentials.html",
     "title": "core.config.Credentials",
     "section": "",
     "text": "core.config.Credentials\ncore.config.Credentials()"
-  },
-  {
-    "objectID": "reference/core.client.KystdataClient.html",
-    "href": "reference/core.client.KystdataClient.html",
-    "title": "core.client.KystdataClient",
-    "section": "",
-    "text": "core.client.KystdataClient(base_url=BASE_URL)\n\n\n\n\n\nName\nDescription\n\n\n\n\nlogin\nAuthenticates with Kystdatahuset and saves the returned JWT bearer token.\n\n\nlogout\nClears the local session state. The Kystdatahuset API does not expose a\n\n\nlookup_ship\nResolves a ship record using the authenticated session.\n\n\nlookup_ships_for_mmsis\nResolves ship records for a batch of MMSI numbers.\n\n\nrequest\nPerform a raw request against an arbitrary API endpoint.\n\n\n\n\n\ncore.client.KystdataClient.login(username, password, csrf_token)\nAuthenticates with Kystdatahuset and saves the returned JWT bearer token.\n\n\n\ncore.client.KystdataClient.logout()\nClears the local session state. The Kystdatahuset API does not expose a logout endpoint, so this only drops the locally held tokens and credentials.\n\n\n\ncore.client.KystdataClient.lookup_ship(value, key='mmsi')\nResolves a ship record using the authenticated session.\n\n\n\ncore.client.KystdataClient.lookup_ships_for_mmsis(mmsis)\nResolves ship records for a batch of MMSI numbers.\n.. note:: This dataset is licensed; the authenticated user needs the Kystdatahuset_ekstern_alle role (or higher) to access it.\n\n\n\ncore.client.KystdataClient.request(\n    endpoint,\n    method='GET',\n    params=None,\n    json_payload=None,\n)\nPerform a raw request against an arbitrary API endpoint.\n:param endpoint: Endpoint path, relative to the API base url, e.g. kystinfo/norvts-incidents :param method: HTTP method to use, e.g. GET or POST :param params: Query string parameters :param json_payload: JSON request body"
-  },
-  {
-    "objectID": "reference/core.client.KystdataClient.html#methods",
-    "href": "reference/core.client.KystdataClient.html#methods",
-    "title": "core.client.KystdataClient",
-    "section": "",
-    "text": "Name\nDescription\n\n\n\n\nlogin\nAuthenticates with Kystdatahuset and saves the returned JWT bearer token.\n\n\nlogout\nClears the local session state. The Kystdatahuset API does not expose a\n\n\nlookup_ship\nResolves a ship record using the authenticated session.\n\n\nlookup_ships_for_mmsis\nResolves ship records for a batch of MMSI numbers.\n\n\nrequest\nPerform a raw request against an arbitrary API endpoint.\n\n\n\n\n\ncore.client.KystdataClient.login(username, password, csrf_token)\nAuthenticates with Kystdatahuset and saves the returned JWT bearer token.\n\n\n\ncore.client.KystdataClient.logout()\nClears the local session state. The Kystdatahuset API does not expose a logout endpoint, so this only drops the locally held tokens and credentials.\n\n\n\ncore.client.KystdataClient.lookup_ship(value, key='mmsi')\nResolves a ship record using the authenticated session.\n\n\n\ncore.client.KystdataClient.lookup_ships_for_mmsis(mmsis)\nResolves ship records for a batch of MMSI numbers.\n.. note:: This dataset is licensed; the authenticated user needs the Kystdatahuset_ekstern_alle role (or higher) to access it.\n\n\n\ncore.client.KystdataClient.request(\n    endpoint,\n    method='GET',\n    params=None,\n    json_payload=None,\n)\nPerform a raw request against an arbitrary API endpoint.\n:param endpoint: Endpoint path, relative to the API base url, e.g. kystinfo/norvts-incidents :param method: HTTP method to use, e.g. GET or POST :param params: Query string parameters :param json_payload: JSON request body"
   },
   {
     "objectID": "reference/index.html",
