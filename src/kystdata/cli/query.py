@@ -104,7 +104,10 @@ class QueryParser(BaseParser):
             logger.info(f"Saving incidents (.json) in {output_dir}")
             for incident in tqdm(incidents, desc="Incident:"):
                 incident_path = output_dir / f"{incident.incident_id}.json"
-                incident_path.write_text(incident.model_dump_json(indent=2, by_alias=True), encoding="utf-8")
+                if incident:
+                    incident_path.write_text(incident.model_dump_json(indent=2, by_alias=True), encoding="utf-8")
+                else:
+                    logger.info("Empty response for {incident.incident_id}")
         else:
             output_path = output_dir / (args.output_filename or "kystdata-incidents.parquet")
             logger.info(f"Saving all incidents (.parquet) to {output_path}")
@@ -142,5 +145,8 @@ class QueryParser(BaseParser):
             self._save_incidents(records, args, output_dir)
         else:
             self._save_records(records, args, output_dir)
+
+        for r in records[:10]:
+            print(r)
 
         client.logout()
