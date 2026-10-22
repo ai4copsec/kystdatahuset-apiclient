@@ -8,8 +8,8 @@ import requests
 logger = logging.getLogger(__name__)
 
 APICLIENT_NAME = "kystdata"
-OPENAPI_URL = "https://kystdatahuset.no/ws/swagger/index.html"
-BASE_URL = "https://kystdatahuset.no/ws/api"
+OPENAPI_URL = "https://kystdatahuset.kystverket.no/ws/swagger/index.html"
+BASE_URL = "https://kystdatahuset.kystverket.no/ws/api"
 
 class KystdataClient:
     login_url: str
